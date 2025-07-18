@@ -1,6 +1,7 @@
 class NotesHandler {
-  constructor(service) {
+  constructor(service, validator) {
     this._service = service;
+    this._validator = validator;
 
     this.postNoteHandler = this.postNoteHandler.bind(this);
     this.getNotesHandler = this.getNotesHandler.bind(this);
@@ -10,28 +11,20 @@ class NotesHandler {
   }
 
   postNoteHandler(request, h) {
-    try {
-      const { title = 'untitled', tags, body } = request.payload;
+    this._validator.validateNotePayload(request.payload);
+    const { title = 'untitled', tags, body } = request.payload;
 
-      const noteId = this._service.addNote({ title, tags, body });
+    const noteId = this._service.addNote({ title, tags, body });
 
-      const response = h.response({
-        status: 'success',
-        message: 'Catatan berhasil ditambahkan',
-        data: {
-          noteId,
-        },
-      });
-      response.code(201);
-      return response;
-    } catch (error) {
-      const response = h.response({
-        status: 'fail',
-        message: error.message,
-      });
-      response.code(400);
-      return response;
-    }
+    const response = h.response({
+      status: 'success',
+      message: 'Catatan berhasil ditambahkan',
+      data: {
+        noteId,
+      },
+    });
+    response.code(201);
+    return response;
   }
 
   getNotesHandler() {
@@ -44,65 +37,39 @@ class NotesHandler {
     };
   }
 
-  getNoteByIdHandler(request, h) {
-    try {
-      const { id } = request.params;
-      const note = this._service.getNoteById(id);
-      return {
-        status: 'success',
-        data: {
-          note,
-        },
-      };
-    } catch (error) {
-      const response = h.response({
-        status: 'fail',
-        message: error.message,
-      });
-      response.code(404);
-      return response;
-    }
+  getNoteByIdHandler(request) {
+    const { id } = request.params;
+    const note = this._service.getNoteById(id);
+    return {
+      status: 'success',
+      data: {
+        note,
+      },
+    };
   }
 
-  putNoteByIdHandler(request, h) {
-    try {
-      const { id } = request.params;
-      const { title, tags, body } = request.payload;
+  putNoteByIdHandler(request) {
+    this._validator.validateNotePayload(request.payload);
+    const { id } = request.params;
+    const { title, tags, body } = request.payload;
 
-      this._service.editNoteById(id, { title, tags, body });
+    this._service.editNoteById(id, { title, tags, body });
 
-      return {
-        status: 'success',
-        message: 'Catatan berhasil diperbarui',
-      };
-    } catch (error) {
-      const response = h.response({
-        status: 'fail',
-        message: error.message,
-      });
-      response.code(404);
-      return response;
-    }
+    return {
+      status: 'success',
+      message: 'Catatan berhasil diperbarui',
+    };
   }
 
-  deleteNoteByIdHandler(request, h) {
-    try {
-      const { id } = request.params;
+  deleteNoteByIdHandler(request) {
+    const { id } = request.params;
 
-      this._service.deleteNoteById(id);
+    this._service.deleteNoteById(id);
 
-      return {
-        status: 'success',
-        message: 'Catatan berhasil dihapus',
-      };
-    } catch (error) {
-      const response = h.response({
-        status: 'fail',
-        message: error.message,
-      });
-      response.code(404);
-      return response;
-    }
+    return {
+      status: 'success',
+      message: 'Catatan berhasil dihapus',
+    };
   }
 }
 
